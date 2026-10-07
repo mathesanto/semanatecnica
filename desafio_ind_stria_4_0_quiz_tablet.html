@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Desafio Indústria 4.0 - Quiz Interativo</title>
+    <!-- Tailwind CSS para utilitários responsivos avançados -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        techDark: '#0b0f19',
+                        techCard: '#131b2e',
+                        techBorder: '#1e293b',
+                        techCyan: '#06b6d4',
+                        techBlue: '#3b82f6',
+                        techPurple: '#8b5cf6',
+                        techGreen: '#10b981',
+                        techRed: '#ef4444'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-dark: #0b0f19;
+            --card-bg: #131b2e;
+            --cyan-glow: rgba(6, 182, 212, 0.4);
+            --green-glow: rgba(16, 185, 129, 0.4);
+            --red-glow: rgba(239, 68, 68, 0.4);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+
+        /* Fundo com efeito de grade de circuitos */
+        .bg-circuit-pattern {
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, var(--bg-dark) 100%),
+                linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        /* Botões do Painel Principal */
+        .btn-number {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #06b6d4;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-number:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .btn-number.answered {
+            background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+            border-color: #10b981;
+            opacity: 0.75;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Cartões de Alternativa */
+        .option-card {
+            background: #131b2e;
+            border: 2px solid #334155;
+            transition: all 0.2s ease;
+        }
+
+        .option-card:active:not(.disabled) {
+            transform: scale(0.98);
+            border-color: #06b6d4;
+            background: #1e293b;
+        }
+
+        .option-card.correct {
+            background: rgba(16, 185, 129, 0.15) !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .option-card.incorrect {
+            background: rgba(239, 68, 68, 0.15) !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Animações e acessibilidade de movimento */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.6); }
+        }
+
+        .glow-pulse {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, ::before, ::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
+
+        /* Foco visível para acessibilidade por teclado */
+        button:focus-visible, a:focus-visible {
+            outline: 3px solid #06b6d4;
+            outline-offset: 4px;
+        }
+    </style>
+</head>
+<body class="bg-circuit-pattern min-h-screen flex flex-col justify-between text-slate-100 p-3 md:p-6 antialiased">
+
+    <!-- Cabeçalho Principal com Status de Pontuação -->
+    <header class="w-full max-w-5xl mx-auto flex flex-wrap justify-between items-center bg-slate-900/90 border border-slate-800 rounded-2xl p-4 mb-4 backdrop-blur shadow-xl">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-cyan-500/30">
+                4.0
+            </div>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold tracking-wide text-cyan-400 leading-tight">DESAFIO INDÚSTRIA 4.0</h1>
+                <p class="text-xs text-slate-400 hidden sm:block">Robótica, automação e qualidade de vida no trabalho</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <!-- Placar de Pontos e Progresso -->
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 flex items-center space-x-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pontos:</span>
+                <span id="score-display" class="text-base md:text-lg font-black text-emerald-400">0 / 0</span>
+            </div>
+            <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl px-3 py-1.5 flex items-center space-x-2">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Respondidas:</span>
+                <span id="progress-display" class="text-base md:text-lg font-black text-cyan-400">0 / 10</span>
+            </div>
+            <!-- Botão de Alternar Som -->
+            <button id="btn-sound" aria-label="Alternar Som" class="bg-slate-800 hover:bg-slate-700 active:scale-95 border border-slate-700 p-2 rounded-xl text-slate-300 transition-all">
+                <svg id="sound-icon-on" class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                <svg id="sound-icon-off" class="w-6 h-6 text-slate-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl mx-auto flex-1 flex flex-col justify-center my-auto">
+
+        <!-- 1. TELA INICIAL (GRADE DE NÚMEROS) -->
+        <section id="screen-home" class="flex flex-col items-center justify-center text-center space-y-6 py-4">
+            <div class="space-y-2">
+                <div class="inline-flex items-center space-x-2 bg-cyan-950/60 border border-cyan-500/30 rounded-full px-4 py-1 text-cyan-300 text-xs font-semibold uppercase tracking-wider mb-2">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    <span>Modo Desafio Ativo</span>
+                </div>
+                <h2 class="text-2xl md:text-4xl font-black tracking-tight text-white">Escolha um número para começar o desafio!</h2>
+                <p class="text-slate-400 text-sm md:text-base max-w-xl mx-auto">Toque em qualquer questão disponível. Ao responder todas as 10 perguntas, você verá seu resultado final.</p>
+            </div>
+
+            <!-- Grade com os 10 botões numéricos -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 md:gap-5 w-full max-w-3xl pt-2">
+                <!-- Botões 1 a 10 gerados dinamicamente via JS ou estáticos com Fallback -->
+                <!-- Gerados no Script -->
+            </div>
+        </section>
+
+        <!-- 2. TELA DA PERGUNTA -->
+        <section id="screen-question" class="hidden flex-col space-y-6 py-2">
+            <!-- Barra Superior com Voltar e Progresso da Pergunta -->
+            <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <button id="btn-back-home" class="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition-all text-sm md:text-base active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    <span>Voltar aos números</span>
+                </button>
+
+                <span id="question-badge" class="text-xs md:text-sm font-extrabold uppercase tracking-widest text-cyan-400 bg-cyan-950/80 px-4 py-2 rounded-lg border border-cyan-800">
+                    PERGUNTA 1 DE 10
+                </span>
+            </div>
+
+            <!-- Cartão com o Texto da Pergunta -->
+            <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl">
+                <h3 id="question-text" class="text-xl md:text-2xl lg:text-3xl font-extrabold text-white leading-relaxed text-balance">
+                    <!-- Pergunta Inserida Via JS -->
+                </h3>
+            </div>
+
+            <!-- Cartões de Opções / Alternativas (A, B, C) -->
+            <div id="options-container" class="grid grid-cols-1 gap-3 md:gap-4">
+                <!-- As opções serão injetadas dinamicamente aqui -->
+            </div>
+
+            <!-- Caixa de Feedback de Resposta (Invisível até responder) -->
+            <div id="feedback-box" class="hidden rounded-2xl p-6 border text-center space-y-2 transition-all transform animate-fade-in">
+                <div id="feedback-title" class="text-2xl md:text-3xl font-black flex items-center justify-center space-x-2">
+                    <!-- Ícone e Resultado (Acertou / Errou) -->
+                </div>
+                <p id="feedback-detail" class="text-base md:text-lg font-medium text-slate-200">
+                    <!-- Detalhes do acerto/erro -->
+                </p>
+                <button id="btn-next-action" class="mt-4 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black px-6 py-3 rounded-xl shadow-lg shadow-cyan-500/30 transition-all active:scale-95 text-base">
+                    Continuar para o Painel
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. TELA FINAL -->
+        <section id="screen-final" class="hidden flex-col items-center justify-center text-center space-y-8 py-6">
+            <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-8 md:p-12 max-w-2xl w-full shadow-2xl space-y-6">
+                <div class="w-20 h-20 bg-gradient-to-tr from-cyan-500 to-emerald-400 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-cyan-500/20 text-4xl">
+                    🏆
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-3xl md:text-4xl font-black text-white tracking-tight">DESAFIO CONCLUÍDO!</h2>
+                    <p class="text-slate-400 text-base">Você respondeu a todas as 10 perguntas do quiz de Indústria 4.0.</p>
+                </div>
+
+                <!-- Pontuação Final Destacada -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-6 space-y-1">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sua Pontuação Final</span>
+                    <div id="final-score" class="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-emerald-400">
+                        8 / 10
+                    </div>
+                </div>
+
+                <!-- Mensagem Motivacional Customizada -->
+                <div id="final-message-card" class="bg-cyan-950/40 border border-cyan-800/50 rounded-2xl p-5 text-cyan-200 text-lg font-semibold leading-relaxed">
+                    <!-- Injetado dinamicamente via JS -->
+                </div>
+
+                <!-- Botão Jogar Novamente -->
+                <button id="btn-restart" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-lg py-4 px-8 rounded-2xl shadow-xl shadow-cyan-500/25 transition-all transform active:scale-95 flex items-center justify-center space-x-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>Jogar Novamente</span>
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Rodapé e Botão para Acessar os Arquivos do Código Fonte (Para Exportação) -->
+    <footer class="w-full max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center border-t border-slate-800/80 pt-4 text-xs text-slate-500 space-y-2 sm:space-y-0">
+        <div>
+            Desenvolvido para atividades escolares e tablets • GitHub Pages Ready
+        </div>
+        <button id="btn-open-docs" class="text-cyan-400 hover:text-cyan-300 font-medium underline flex items-center space-x-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+            <span>Ver Arquivos do Projeto (index.html, style.css, script.js, README.md)</span>
+        </button>
+    </footer>
+
+    <!-- MODAL DE DOCUMENTAÇÃO E CÓDIGOS PARA DOWNLOAD/CÓPIA -->
+    <div id="modal-docs" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex-col p-4 md:p-8 overflow-y-auto">
+        <div class="max-w-4xl w-full mx-auto bg-slate-900 border border-slate-800 rounded-2xl flex flex-col my-auto shadow-2xl max-h-[90vh]">
+            <!-- Cabeçalho Modal -->
+            <div class="flex justify-between items-center p-4 md:p-6 border-b border-slate-800">
+                <h3 class="text-lg md:text-xl font-bold text-cyan-400">Código Fonte Separável e Guia do GitHub Pages</h3>
+                <button id="btn-close-docs" class="text-slate-400 hover:text-white p-2 rounded-xl bg-slate-800 text-sm font-bold">
+                    ✕ Fechar
+                </button>
+            </div>
+
+            <!-- Navegação entre os Arquivos -->
+            <div class="flex border-b border-slate-800 bg-slate-950/50 px-4 pt-2 overflow-x-auto space-x-2">
+                <button data-tab="tab-index" class="tab-btn px-4 py-2 border-b-2 border-cyan-400 font-bold text-cyan-400 text-sm">index.html</button>
+                <button data-tab="tab-style" class="tab-btn px-4 py-2 border-b-2 border-transparent font-medium text-slate-400 hover:text-slate-200 text-sm">style.css</button>
+                <button data-tab="tab-script" class="tab-btn px-4 py-2 border-b-2 border-transparent font-medium text-slate-400 hover:text-slate-200 text-sm">script.js</button>
+                <button data-tab="tab-readme" class="tab-btn px-4 py-2 border-b-2 border-transparent font-medium text-slate-400 hover:text-slate-200 text-sm">README.md</button>
+            </div>
+
+            <!-- Conteúdo dos Arquivos -->
+            <div class="p-4 md:p-6 overflow-y-auto flex-1 bg-slate-950 text-slate-300 font-mono text-xs md:text-sm">
+                
+                <!-- Tab index.html -->
+                <div id="tab-index" class="tab-content space-y-2">
+                    <div class="flex justify-between items-center pb-2">
+                        <span class="text-slate-400">Estrutura HTML do Projeto</span>
+                        <button onclick="copyCode('code-index')" class="bg-cyan-900/60 text-cyan-300 px-3 py-1 rounded text-xs hover:bg-cyan-800">Copiar</button>
+                    </div>
+                    <pre><code id="code-index" class="block whitespace-pre-wrap break-all bg-slate-900 p-4 rounded-xl text-slate-300 border border-slate-800">
+&lt;!DOCTYPE html&gt;
+&lt;html lang="pt-BR"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Desafio Indústria 4.0&lt;/title&gt;
+    &lt;link rel="stylesheet" href="style.css"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Acesse a estrutura completa no projeto online --&gt;
+    &lt;div id="app"&gt;&lt;/div&gt;
+    &lt;script src="script.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+                    </code></pre>
+                </div>
+
+                <!-- Tab style.css -->
+                <div id="tab-style" class="tab-content hidden space-y-2">
+                    <div class="flex justify-between items-center pb-2">
+                        <span class="text-slate-400">Estilos CSS3 (sem frameworks)</span>
+                        <button onclick="copyCode('code-style')" class="bg-cyan-900/60 text-cyan-300 px-3 py-1 rounded text-xs hover:bg-cyan-800">Copiar</button>
+                    </div>
+                    <pre><code id="code-style" class="block whitespace-pre-wrap break-all bg-slate-900 p-4 rounded-xl text-slate-300 border border-slate-800">
+/* style.css - Tema Dark Mode Indústria 4.0 */
+:root {
+    --bg-dark: #0b0f19;
+    --card-bg: #131b2e;
+    --primary-cyan: #06b6d4;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: #ffffff;
+    font-family: system-ui, -apple-system, sans-serif;
+    margin: 0;
+    padding: 16px;
+}
+
+/* Botões Grandes para Tablet */
+button {
+    min-height: 48px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+                    </code></pre>
+                </div>
+
+                <!-- Tab script.js -->
+                <div id="tab-script" class="tab-content hidden space-y-2">
+                    <div class="flex justify-between items-center pb-2">
+                        <span class="text-slate-400">Lógica JS Vanilla & Perguntas</span>
+                        <button onclick="copyCode('code-script')" class="bg-cyan-900/60 text-cyan-300 px-3 py-1 rounded text-xs hover:bg-cyan-800">Copiar</button>
+                    </div>
+                    <pre><code id="code-script" class="block whitespace-pre-wrap break-all bg-slate-900 p-4 rounded-xl text-slate-300 border border-slate-800">
+// script.js - Banco de Perguntas e Lógica
+const questions = [
+    {
+        question: "O que caracteriza a Indústria 4.0?",
+        options: [
+            "Uso apenas de máquinas manuais",
+            "Integração de tecnologias e automação nos processos",
+            "Fim da participação humana nas fábricas"
+        ],
+        correct: 1
+    },
+    {
+        question: "Qual é uma função comum dos robôs industriais?",
+        options: [
+            "Executar tarefas repetitivas com precisão",
+            "Substituir toda a administração",
+            "Impedir a produção"
+        ],
+        correct: 0
+    },
+    {
+        question: "Como a robótica pode contribuir para a qualidade de vida no trabalho?",
+        options: [
+            "Aumentando tarefas perigosas para os funcionários",
+            "Auxiliando em tarefas repetitivas ou de risco",
+            "Eliminando toda necessidade de treinamento"
+        ],
+        correct: 1
+    },
+    {
+        question: "Mesmo com a automação, por que trabalhadores continuam sendo importantes?",
+        options: [
+            "Porque máquinas nunca podem ser utilizadas",
+            "Porque pessoas podem operar, programar, supervisionar e realizar manutenção",
+            "Porque robôs não conseguem fazer nenhuma tarefa"
+        ],
+        correct: 1
+    },
+    {
+        question: "Qual pode ser um desafio da automação para os trabalhadores?",
+        options: [
+            "Necessidade de adaptação e novas qualificações",
+            "Aumento obrigatório de férias",
+            "Fim de qualquer necessidade de aprendizagem"
+        ],
+        correct: 0
+    },
+    {
+        question: "O que é automação?",
+        options: [
+            "Uso de tecnologias para realizar ou controlar processos com menor intervenção manual",
+            "Trabalho feito somente à mão",
+            "Desligamento das máquinas"
+        ],
+        correct: 0
+    },
+    {
+        question: "Por que a manutenção é importante em uma fábrica automatizada?",
+        options: [
+            "Para manter máquinas e sistemas funcionando com segurança",
+            "Para deixar os robôs sem supervisão",
+            "Para aumentar propositalmente as falhas"
+        ],
+        correct: 0
+    },
+    {
+        question: "Qual destas tecnologias pode fazer parte da Indústria 4.0?",
+        options: [
+            "Robótica",
+            "Máquina de escrever como única tecnologia",
+            "Produção sem nenhum equipamento"
+        ],
+        correct: 0
+    },
+    {
+        question: "Um possível benefício da robótica é:",
+        options: [
+            "Reduzir a exposição humana a algumas tarefas perigosas",
+            "Eliminar todos os empregos automaticamente",
+            "Impedir qualquer inovação"
+        ],
+        correct: 0
+    },
+    {
+        question: "Qual é a ideia principal ao relacionar robótica e qualidade de vida?",
+        options: [
+            "Usar a tecnologia para apoiar processos e trabalhadores, considerando também seus desafios",
+            "Usar robôs sem considerar as pessoas",
+            "Trocar todos os funcionários por máquinas"
+        ],
+        correct: 0
+    }
+];
+                    </code></pre>
+                </div>
+
+                <!-- Tab README.md -->
+                <div id="tab-readme" class="tab-content hidden space-y-4 font-sans text-sm">
+                    <h4 class="text-base font-bold text-cyan-400">Guia de Publicação no GitHub Pages</h4>
+                    <ol class="list-decimal list-inside space-y-2 text-slate-300">
+                        <li>Crie uma conta gratuita no GitHub em <a href="https://github.com" target="_blank" class="text-cyan-400 underline">github.com</a>.</li>
+                        <li>Crie um novo repositório público com o nome, por exemplo, <code class="bg-slate-800 px-2 py-0.5 rounded text-cyan-300">quiz-industria-40</code>.</li>
+                        <li>Envie o arquivo <code class="bg-slate-800 px-2 py-0.5 rounded text-cyan-300">index.html</code> (ou os arquivos separados) para o repositório.</li>
+                        <li>No repositório, vá na aba <strong>Settings</strong> (Configurações) &gt; <strong>Pages</strong>.</li>
+                        <li>Na seção <em>Build and deployment</em>, defina a branch como <strong>main</strong> ou <strong>master</strong> e pasta <strong>/(root)</strong>.</li>
+                        <li>Clique em <strong>Save</strong>. Em instantes, o link público do seu quiz estará disponível!</li>
+                    </ol>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Banco de Dados das 10 Perguntas (Conforme especificado)
+        const questions = [
+            {
+                question: "O que caracteriza a Indústria 4.0?",
+                options: [
+                    "Uso apenas de máquinas manuais",
+                    "Integração de tecnologias e automação nos processos",
+                    "Fim da participação humana nas fábricas"
+                ],
+                correct: 1
+            },
+            {
+                question: "Qual é uma função comum dos robôs industriais?",
+                options: [
+                    "Executar tarefas repetitivas com precisão",
+                    "Substituir toda a administração",
+                    "Impedir a produção"
+                ],
+                correct: 0
+            },
+            {
+                question: "Como a robótica pode contribuir para a qualidade de vida no trabalho?",
+                options: [
+                    "Aumentando tarefas perigosas para os funcionários",
+                    "Auxiliando em tarefas repetitivas ou de risco",
+                    "Eliminando toda necessidade de treinamento"
+                ],
+                correct: 1
+            },
+            {
+                question: "Mesmo com a automação, por que trabalhadores continuam sendo importantes?",
+                options: [
+                    "Porque máquinas nunca podem ser utilizadas",
+                    "Porque pessoas podem operar, programar, supervisionar e realizar manutenção",
+                    "Porque robôs não conseguem fazer nenhuma tarefa"
+                ],
+                correct: 1
+            },
+            {
+                question: "Qual pode ser um desafio da automação para os trabalhadores?",
+                options: [
+                    "Necessidade de adaptação e novas qualificações",
+                    "Aumento obrigatório de férias",
+                    "Fim de qualquer necessidade de aprendizagem"
+                ],
+                correct: 0
+            },
+            {
+                question: "O que é automação?",
+                options: [
+                    "Uso de tecnologias para realizar ou controlar processos com menor intervenção manual",
+                    "Trabalho feito somente à mão",
+                    "Desligamento das máquinas"
+                ],
+                correct: 0
+            },
+            {
+                question: "Por que a manutenção é importante em uma fábrica automatizada?",
+                options: [
+                    "Para manter máquinas e sistemas funcionando com segurança",
+                    "Para deixar os robôs sem supervisão",
+                    "Para aumentar propositalmente as falhas"
+                ],
+                correct: 0
+            },
+            {
+                question: "Qual destas tecnologias pode fazer parte da Indústria 4.0?",
+                options: [
+                    "Robótica",
+                    "Máquina de escrever como única tecnologia",
+                    "Produção sem nenhum equipamento"
+                ],
+                correct: 0
+            },
+            {
+                question: "Um possível benefício da robótica é:",
+                options: [
+                    "Reduzir a exposição humana a algumas tarefas perigosas",
+                    "Eliminar todos os empregos automaticamente",
+                    "Impedir qualquer inovação"
+                ],
+                correct: 0
+            },
+            {
+                question: "Qual é a ideia principal ao relacionar robótica e qualidade de vida?",
+                options: [
+                    "Usar a tecnologia para apoiar processos e trabalhadores, considerando também seus desafios",
+                    "Usar robôs sem considerar as pessoas",
+                    "Trocar todos os funcionários por máquinas"
+                ],
+                correct: 0
+            }
+        ];
+
+        // Estado Global da Aplicação
+        let gameState = {
+            answeredQuestions: new Array(questions.length).fill(false), // true se respondida
+            userAnswers: new Array(questions.length).fill(null), // índice escolhido
+            score: 0,
+            currentQuestionIndex: null,
+            soundEnabled: true
+        };
+
+        // Sintetizador de Áudio Nativo do Navegador (Sem Arquivos Externos)
+        const SoundFX = {
+            audioCtx: null,
+            
+            init() {
+                if (!this.audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.audioCtx = new AudioContext();
+                    }
+                }
+            },
+
+            playClick() {
+                if (!gameState.soundEnabled) return;
+                this.init();
+                if (!this.audioCtx) return;
+
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.audioCtx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                osc.start();
+                osc.stop(this.audioCtx.currentTime + 0.05);
+            },
+
+            playCorrect() {
+                if (!gameState.soundEnabled) return;
+                this.init();
+                if (!this.audioCtx) return;
+
+                const now = this.audioCtx.currentTime;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = 'triangle';
+                
+                // Arpejo de Vitória (Notas Do-Mi-Sol-Do)
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                osc.start();
+                osc.stop(now + 0.4);
+            },
+
+            playIncorrect() {
+                if (!gameState.soundEnabled) return;
+                this.init();
+                if (!this.audioCtx) return;
+
+                const now = this.audioCtx.currentTime;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.type = 'sawtooth';
+
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.linearRampToValueAtTime(110, now + 0.3); // A2 Descendendo
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                osc.connect(gain);
+                gain.connect(this.audioCtx.destination);
+                osc.start();
+                osc.stop(now + 0.3);
+            }
+        };
+
+        // Elementos DOM
+        const screenHome = document.getElementById('screen-home');
+        const screenQuestion = document.getElementById('screen-question');
+        const screenFinal = document.getElementById('screen-final');
+
+        const scoreDisplay = document.getElementById('score-display');
+        const progressDisplay = document.getElementById('progress-display');
+
+        const numbersGrid = screenHome.querySelector('.grid');
+        const btnBackHome = document.getElementById('btn-back-home');
+        const questionBadge = document.getElementById('question-badge');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackDetail = document.getElementById('feedback-detail');
+        const btnNextAction = document.getElementById('btn-next-action');
+
+        const finalScore = document.getElementById('final-score');
+        const finalMessageCard = document.getElementById('final-message-card');
+        const btnRestart = document.getElementById('btn-restart');
+
+        const btnSound = document.getElementById('btn-sound');
+        const soundIconOn = document.getElementById('sound-icon-on');
+        const soundIconOff = document.getElementById('sound-icon-off');
+
+        // Renderizar Grade de Botões de Números (1 a 10)
+        function renderNumberButtons() {
+            numbersGrid.innerHTML = '';
+
+            questions.forEach((_, idx) => {
+                const btn = document.createElement('button');
+                const isAnswered = gameState.answeredQuestions[idx];
+
+                btn.className = `btn-number relative flex flex-col items-center justify-center p-6 md:p-8 rounded-2xl text-2xl md:text-3xl font-black text-white ${isAnswered ? 'answered' : 'glow-pulse'}`;
+                btn.setAttribute('aria-label', `Pergunta ${idx + 1}${isAnswered ? ' (Já respondida)' : ''}`);
+
+                btn.innerHTML = `
+                    <span>${idx + 1}</span>
+                    ${isAnswered ? '<span class="absolute top-2 right-2 text-emerald-400 text-lg font-bold">✓</span>' : ''}
+                `;
+
+                btn.addEventListener('click', () => {
+                    SoundFX.playClick();
+                    openQuestion(idx);
+                });
+
+                numbersGrid.appendChild(btn);
+            });
+
+            updateHeaderStats();
+        }
+
+        // Atualiza a Barra de Status Superior
+        function updateHeaderStats() {
+            const answeredCount = gameState.answeredQuestions.filter(Boolean).length;
+            scoreDisplay.textContent = `${gameState.score} / ${answeredCount}`;
+            progressDisplay.textContent = `${answeredCount} / ${questions.length}`;
+
+            // Se respondeu todas as 10, navegar automaticamente para Tela Final
+            if (answeredCount === questions.length && screenQuestion.classList.contains('hidden')) {
+                showFinalScreen();
+            }
+        }
+
+        // Transição de Tela: Abrir Pergunta Específica
+        function openQuestion(index) {
+            gameState.currentQuestionIndex = index;
+            const q = questions[index];
+            const isAlreadyAnswered = gameState.answeredQuestions[index];
+
+            questionBadge.textContent = `PERGUNTA ${index + 1} DE ${questions.length}`;
+            questionText.textContent = q.question;
+
+            // Limpar Opções Anteriores
+            optionsContainer.innerHTML = '';
+            feedbackBox.classList.add('hidden');
+
+            const labels = ['A', 'B', 'C'];
+
+            q.options.forEach((optText, optIdx) => {
+                const card = document.createElement('button');
+                card.className = `option-card text-left p-5 md:p-6 rounded-2xl flex items-center space-x-4 text-base md:text-xl font-medium w-full text-slate-100 ${isAlreadyAnswered ? 'disabled opacity-90 cursor-default' : ''}`;
+                
+                card.innerHTML = `
+                    <span class="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-800 text-cyan-400 border border-slate-700 flex items-center justify-center font-bold text-lg md:text-xl shrink-0">
+                        ${labels[optIdx]}
+                    </span>
+                    <span class="flex-1">${optText}</span>
+                `;
+
+                if (!isAlreadyAnswered) {
+                    card.addEventListener('click', () => handleOptionSelect(optIdx));
+                } else {
+                    // Estilizar se já foi respondido anteriormente
+                    if (optIdx === q.correct) {
+                        card.classList.add('correct');
+                    } else if (optIdx === gameState.userAnswers[index]) {
+                        card.classList.add('incorrect');
+                    }
+                }
+
+                optionsContainer.appendChild(card);
+            });
+
+            // Se já foi respondida, mostrar feedback estático sem alterar pontuação
+            if (isAlreadyAnswered) {
+                showFeedback(gameState.userAnswers[index] === q.correct, q.correct, true);
+            }
+
+            // Exibir Tela da Pergunta
+            screenHome.classList.add('hidden');
+            screenFinal.classList.add('hidden');
+            screenQuestion.classList.remove('hidden');
+            screenQuestion.classList.add('flex');
+        }
+
+        function handleOptionSelect(selectedOptionIndex) {
+            const index = gameState.currentQuestionIndex;
+            const q = questions[index];
+
+            if (gameState.answeredQuestions[index]) return; // Evita duplo clique
+
+            gameState.answeredQuestions[index] = true;
+            gameState.userAnswers[index] = selectedOptionIndex;
+
+            const isCorrect = selectedOptionIndex === q.correct;
+
+            if (isCorrect) {
+                gameState.score += 1;
+                SoundFX.playCorrect();
+            } else {
+                SoundFX.playIncorrect();
+            }
+
+            // Atualizar Estilos das Opções
+            const optionButtons = optionsContainer.querySelectorAll('.option-card');
+            optionButtons.forEach((btn, idx) => {
+                btn.classList.add('disabled');
+                if (idx === q.correct) {
+                    btn.classList.add('correct');
+                } else if (idx === selectedOptionIndex) {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            updateHeaderStats();
+            showFeedback(isCorrect, q.correct, false);
+        }
+
+        // Exibe Caixa de Feedback na Pergunta
+        function showFeedback(isCorrect, correctIndex, isReview) {
+            feedbackBox.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-500/40', 'bg-rose-950/80', 'border-rose-500/40');
+            
+            const labels = ['A', 'B', 'C'];
+
+            if (isCorrect) {
+                feedbackBox.classList.add('bg-emerald-950/80', 'border-emerald-500/40');
+                feedbackTitle.className = 'text-2xl md:text-3xl font-black flex items-center justify-center space-x-2 text-emerald-400';
+                feedbackTitle.innerHTML = `<span>✅</span> <span>ACERTOU!</span>`;
+                feedbackDetail.textContent = "Muito bem! Você selecionou a alternativa correta.";
+            } else {
+                feedbackBox.classList.add('bg-rose-950/80', 'border-rose-500/40');
+                feedbackTitle.className = 'text-2xl md:text-3xl font-black flex items-center justify-center space-x-2 text-rose-400';
+                feedbackTitle.innerHTML = `<span>❌</span> <span>NÃO FOI DESSA VEZ!</span>`;
+                feedbackDetail.textContent = `A resposta correta era: ${labels[correctIndex]}) ${questions[gameState.currentQuestionIndex].options[correctIndex]}`;
+            }
+
+            feedbackBox.classList.remove('hidden');
+        }
+
+        function showFinalScreen() {
+            screenHome.classList.add('hidden');
+            screenQuestion.classList.add('hidden');
+            screenFinal.classList.remove('hidden');
+            screenFinal.classList.add('flex');
+
+            finalScore.textContent = `${gameState.score} / ${questions.length}`;
+
+            // Determinar Mensagem de Desempenho
+            const score = gameState.score;
+            let message = "";
+
+            if (score >= 9) {
+                message = "🏆 Excelente! Você domina os conceitos de Indústria 4.0!";
+            } else if (score >= 7) {
+                message = "👏 Muito bem! Você compreendeu os principais conceitos.";
+            } else if (score >= 5) {
+                message = "👍 Bom trabalho! Ainda há alguns conceitos para revisar.";
+            } else {
+                message = "📚 Continue estudando! A tecnologia também exige aprendizagem constante.";
+            }
+
+            finalMessageCard.textContent = message;
+        }
+
+        // Reiniciar Todo o Estado do Jogo
+        function resetGame() {
+            gameState.answeredQuestions = new Array(questions.length).fill(false);
+            gameState.userAnswers = new Array(questions.length).fill(null);
+            gameState.score = 0;
+            gameState.currentQuestionIndex = null;
+
+            renderNumberButtons();
+
+            screenQuestion.classList.add('hidden');
+            screenFinal.classList.add('hidden');
+            screenHome.classList.remove('hidden');
+            screenHome.classList.add('flex');
+        }
+
+        // Alternar Som (On/Off)
+        btnSound.addEventListener('click', () => {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            soundIconOn.classList.toggle('hidden', !gameState.soundEnabled);
+            soundIconOff.classList.toggle('hidden', gameState.soundEnabled);
+            if (gameState.soundEnabled) SoundFX.playClick();
+        });
+
+        // Botão Voltar ao Painel
+        btnBackHome.addEventListener('click', () => {
+            SoundFX.playClick();
+            screenQuestion.classList.add('hidden');
+            screenHome.classList.remove('hidden');
+            renderNumberButtons();
+        });
+
+        // Botão Continuar para o Painel no Feedback
+        btnNextAction.addEventListener('click', () => {
+            SoundFX.playClick();
+            screenQuestion.classList.add('hidden');
+            screenHome.classList.remove('hidden');
+            renderNumberButtons();
+        });
+
+        // Botão Reiniciar Jogo
+        btnRestart.addEventListener('click', () => {
+            SoundFX.playClick();
+            resetGame();
+        });
+
+        // Gestão do Modal de Código / Documentação
+        const modalDocs = document.getElementById('modal-docs');
+        const btnOpenDocs = document.getElementById('btn-open-docs');
+        const btnCloseDocs = document.getElementById('btn-close-docs');
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        btnOpenDocs.addEventListener('click', () => {
+            modalDocs.classList.remove('hidden');
+            modalDocs.classList.add('flex');
+        });
+
+        btnCloseDocs.addEventListener('click', () => {
+            modalDocs.classList.add('hidden');
+        });
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.getAttribute('data-tab');
+
+                tabBtns.forEach(b => {
+                    b.classList.remove('border-cyan-400', 'text-cyan-400', 'font-bold');
+                    b.classList.add('border-transparent', 'text-slate-400');
+                });
+                btn.classList.add('border-cyan-400', 'text-cyan-400', 'font-bold');
+
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== targetTab);
+                });
+            });
+        });
+
+        // Função de Cópia Segura de Código para Área de Transferência
+        window.copyCode = function(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+
+            const textToCopy = el.innerText || el.textContent;
+            
+            // Método seguro com fallback para iframe/sandbox
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('Código copiado com sucesso!');
+            } catch (err) {
+                console.error('Falha ao copiar:', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        };
+
+        // Inicialização Principal ao Carregar Janela
+        window.onload = function() {
+            renderNumberButtons();
+        };
+    </script>
+</body>
+</html>
